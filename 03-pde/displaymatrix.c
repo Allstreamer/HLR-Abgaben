@@ -56,3 +56,4 @@ void DisplayMatrix(char* s, double* v, int interlines)
     }
     fflush(stdout);
 }
+

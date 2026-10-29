@@ -1,5 +1,5 @@
 # Common definitions
-CC = gcc
+CC = clang
 
 # Compiler flags, paths and libraries
 CFLAGS = -std=c11 -pedantic -Wall -Wextra -O0 -gdwarf-4

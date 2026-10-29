@@ -105,7 +105,7 @@ static void allocateMatrices(struct calculation_arguments* arguments)
     arguments->M = allocateMemory(arguments->num_matrices * (N + 1) * (N + 1) * sizeof(double));
     arguments->Matrix = allocateMemory(arguments->num_matrices * sizeof(double**));
 
-    for (i = 0; i <= arguments->num_matrices; i++) {
+    for (i = 0; i < arguments->num_matrices; i++) {
         arguments->Matrix[i] = allocateMemory((N + 1) * sizeof(double*));
 
         for (j = 0; j <= N; j++) {
@@ -153,16 +153,16 @@ static void initMatrices(struct calculation_arguments* arguments, struct options
 /* ************************************************************************ */
 double getResiduum(struct calculation_arguments* arguments, struct options* options, int x, int y, double star)
 {
-    double* result = malloc(sizeof(double));
+    double result = 0.0;
     if (options->inf_func == FUNC_F0) {
-        *result = ((-star) / 4.0);
-        return *result;
+        result = ((-star) / 4.0);
+        return result;
     } else {
-        *result = ((TWO_PI_SQUARE * sin((double)(y)*PI * arguments->h) * sin((double)(x)*PI * arguments->h)
+        result = ((TWO_PI_SQUARE * sin((double)(y)*PI * arguments->h) * sin((double)(x)*PI * arguments->h)
                            * arguments->h * arguments->h
                        - star)
             / 4.0);
-        return *result;
+        return result;
     }
 }
 
