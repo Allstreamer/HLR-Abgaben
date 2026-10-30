@@ -28,6 +28,7 @@ struct calculation_arguments {
     int N; /* number of spaces between lines (lines=N+1)     */
     int num_matrices; /* number of matrices                             */
     double ***Matrix; /* index matrix used for addressing M             */
+    double *function_lookup_table;
     double *M; /* two matrices with real values                  */
     double h; /* length of a space between two lines            */
 };
@@ -54,6 +55,7 @@ static void initVariables(struct calculation_arguments *arguments,
                           const struct options *options) {
     arguments->N = options->interlines * 8 + 9 - 1;
     arguments->num_matrices = (options->method == METH_JACOBI) ? 2 : 1;
+    arguments->function_lookup_table = NULL;
     //
     arguments->h = (double) (1.0f / (float) arguments->N);
 
@@ -72,6 +74,10 @@ static void freeMatrices(const struct calculation_arguments *arguments) {
 
     free(arguments->Matrix);
     free(arguments->M);
+
+    if (arguments->function_lookup_table != NULL) {
+        free(arguments->function_lookup_table);
+    }
 }
 
 /* ************************************************************************ */
@@ -93,7 +99,7 @@ static void *allocateMemory(const size_t size) {
 /* ************************************************************************ */
 /* allocateMatrices: allocates memory for matrices                          */
 /* ************************************************************************ */
-static void allocateMatrices(struct calculation_arguments *arguments) {
+static void allocateMatrices(struct calculation_arguments *arguments, const struct options *options) {
     const int N = arguments->N;
 
     arguments->M = allocateMemory(arguments->num_matrices * (N + 1) * (N + 1) *
@@ -108,6 +114,10 @@ static void allocateMatrices(struct calculation_arguments *arguments) {
             arguments->Matrix[i][j] =
                     (double *) (arguments->M + (i * (N + 1) * (N + 1)) + (j * (N + 1)));
         }
+    }
+
+    if (options->inf_func != FUNC_F0) {
+        arguments->function_lookup_table = (double *)allocateMemory((N + 1) * sizeof(double));
     }
 }
 
@@ -140,28 +150,31 @@ static void initMatrices(const struct calculation_arguments *arguments,
             }
         }
     }
+
+    if (options->inf_func != FUNC_F0) {
+        const double constant_factor = PI * arguments->h;
+        for (int i = 0; i < N; i++) {
+            arguments->function_lookup_table[i] = (
+                sin((double) (i) * constant_factor)
+            );
+        }
+    }
 }
 
 /* ************************************************************************ */
 /* getResiduum: calculates residuum                                         */
 /* Input: x,y - actual column and row                                       */
 /* ************************************************************************ */
-static double getResiduum(const struct calculation_arguments *arguments,
+static inline __attribute__((always_inline))
+double getResiduum(const struct calculation_arguments *arguments,
                           const struct options *options, const int x,
                           const int y, const double star) {
-    double result = 0.0;
-
     if (options->inf_func == FUNC_F0) {
-        result = ((-star) / 4.0);
-        return result;
+        return -star / 4.0;
     }
+    const double pi_h = TWO_PI_SQUARE * arguments->h * arguments->h;
 
-    result =
-    ((TWO_PI_SQUARE * sin((double) (y) * PI * arguments->h) *
-      sin((double) (x) * PI * arguments->h) * arguments->h * arguments->h -
-      star) /
-     4.0);
-    return result;
+    return (arguments->function_lookup_table[x] * arguments->function_lookup_table[y] * pi_h - star) / 4.0;
 }
 
 /* ************************************************************************ */
@@ -185,6 +198,7 @@ static void calculate(const struct calculation_arguments *arguments,
         m1 = 0;
         m2 = 1;
     }
+
 
     while (options->term_iteration > 0) {
         /* over all columns */
@@ -287,7 +301,7 @@ int main(int argc, char *argv[]) {
     initVariables(&arguments, &results, &options);
 
     /*  get and initialize variables and matrices */
-    allocateMatrices(&arguments);
+    allocateMatrices(&arguments, &options);
     initMatrices(&arguments, &options);
 
     /*  start timer         */
