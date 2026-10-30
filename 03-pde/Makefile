@@ -2,7 +2,7 @@
 CC = clang
 
 # Compiler flags, paths and libraries
-CFLAGS = -std=c11 -pedantic -Wall -Wextra -O0 -gdwarf-4
+CFLAGS = -std=c11 -pedantic -Wall -Wextra -O3 -march=westmere -gdwarf-4
 LFLAGS = $(CFLAGS)
 LIBS   = -lm
 

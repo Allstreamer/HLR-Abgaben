@@ -187,10 +187,10 @@ static void calculate(const struct calculation_arguments *arguments,
     }
 
     while (options->term_iteration > 0) {
-        /* over all rows */
-        for (int j = 1; j < N; j++) {
-            /* over all columns */
-            for (int i = 1; i < N; i++) {
+        /* over all columns */
+        for (int i = 1; i < N; i++) {
+            /* over all rows */
+            for (int j = 1; j < N; j++) {
                 if (i == 1 && j == 1) {
                     results->stat_precision = 0;
                 }
