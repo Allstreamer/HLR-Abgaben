@@ -105,7 +105,8 @@ static void allocateMatrices(struct calculation_arguments* arguments)
     arguments->M = allocateMemory(arguments->num_matrices * (N + 1) * (N + 1) * sizeof(double));
     arguments->Matrix = allocateMemory(arguments->num_matrices * sizeof(double**));
 
-    for (i = 0; i <= arguments->num_matrices; i++) {
+    /* Fehler: "i <=" schrieb hinter das Ende von Matrix (Invalid write). Korrektur: "i <" */
+    for (i = 0; i < arguments->num_matrices; i++) {
         arguments->Matrix[i] = allocateMemory((N + 1) * sizeof(double*));
 
         for (j = 0; j <= N; j++) {
@@ -148,25 +149,6 @@ static void initMatrices(struct calculation_arguments* arguments, struct options
 }
 
 /* ************************************************************************ */
-/* getResiduum: calculates residuum                                         */
-/* Input: x,y - actual column and row                                       */
-/* ************************************************************************ */
-double getResiduum(struct calculation_arguments* arguments, struct options* options, int x, int y, double star)
-{
-    double* result = malloc(sizeof(double));
-    if (options->inf_func == FUNC_F0) {
-        *result = ((-star) / 4.0);
-        return *result;
-    } else {
-        *result = ((TWO_PI_SQUARE * sin((double)(y)*PI * arguments->h) * sin((double)(x)*PI * arguments->h)
-                           * arguments->h * arguments->h
-                       - star)
-            / 4.0);
-        return *result;
-    }
-}
-
-/* ************************************************************************ */
 /* calculate: solves the equation                                           */
 /* ************************************************************************ */
 static void calculate(
@@ -179,7 +161,17 @@ static void calculate(
     double residuum; /* residuum of current iteration                  */
 
     int N = arguments->N;
+    double h = arguments->h;
     double*** Matrix = arguments->Matrix;
+
+    /* Optimierung: sin(k*PI*h) haengt nur vom Index ab, nicht von der Iteration.
+       Daher einmal vorab berechnen, statt zweimal pro Punkt und Iteration. */
+    double* sinTable = allocateMemory((N + 1) * sizeof(double));
+    for (i = 0; i <= N; i++) {
+        sinTable[i] = sin((double)(i)*PI * h);
+    }
+    /* Optimierung: konstanter Faktor nur einmal berechnen */
+    double fpisin = TWO_PI_SQUARE * h * h;
 
     /* initialize m1 and m2 depending on algorithm */
     if (options->method == METH_GAUSS_SEIDEL) {
@@ -192,17 +184,24 @@ static void calculate(
 
     while (options->term_iteration > 0) {
 
+        /* Optimierung: Schleifen getauscht, innen laeuft j (zusammenhaengend im Speicher) -> weniger Cache-Misses */
         /* over all rows */
-        for (j = 1; j < N; j++) {
+        for (i = 1; i < N; i++) {
             /* over all columns */
-            for (i = 1; i < N; i++) {
+            for (j = 1; j < N; j++) {
                 if (i == 1 && j == 1) {
                     results->stat_precision = 0;
                 }
                 star = -Matrix[m2][i - 1][j] - Matrix[m2][i][j - 1] - Matrix[m2][i][j + 1] - Matrix[m2][i + 1][j]
                     + 4.0 * Matrix[m2][i][j];
 
-                residuum = getResiduum(arguments, options, i, j, star);
+                /* Optimierung: getResiduum inline, spart einen Funktionsaufruf pro Punkt.
+                   (Dort war auch das Speicherleck durch malloc, siehe Abgabe.) */
+                if (options->inf_func == FUNC_F0) {
+                    residuum = (-star) / 4.0;
+                } else {
+                    residuum = (fpisin * sinTable[j] * sinTable[i] - star) / 4.0;
+                }
                 korrektur = residuum;
                 residuum = (residuum < 0) ? -residuum : residuum;
                 results->stat_precision = (residuum < results->stat_precision) ? results->stat_precision : residuum;
@@ -229,6 +228,8 @@ static void calculate(
     }
 
     results->m = m2;
+
+    free(sinTable);
 }
 
 /* ************************************************************************ */
