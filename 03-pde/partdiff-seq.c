@@ -33,7 +33,7 @@ struct calculation_arguments {
 };
 
 struct calculation_results {
-    int m;
+    int m; /* Result Matrix */
     int stat_iteration; /* number of current iteration                    */
     double stat_precision; /* actual precision of all slaves in iteration    */
 };
@@ -43,8 +43,8 @@ struct calculation_results {
 /* ************************************************************************ */
 
 /* time measurement variables */
-struct timeval start_time; /* time when program started                      */
-struct timeval comp_time; /* time when calculation completed                */
+static struct timeval start_time; /* time when program started                      */
+static struct timeval comp_time; /* time when calculation completed                */
 
 /* ************************************************************************ */
 /* initVariables: Initializes some global variables                         */
