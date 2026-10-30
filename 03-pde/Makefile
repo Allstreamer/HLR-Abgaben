@@ -1,8 +1,19 @@
 # Common definitions
 CC = clang
+#CC = gcc
+
+# Testing assert:
+# CUSTOM_FLAGS = -O3 -march=westmere -gdwarf-4 -DNDEBUG
+# CUSTOM_FLAGS = -O3 -march=westmere -gdwarf-4
+
+# Benchmarking flags:
+CUSTOM_FLAGS = -O3 -march=westmere -gdwarf-4 -DNDEBUG -fno-omit-frame-pointer -fno-optimize-sibling-calls
+
+# Release flags:
+# CUSTOM_FLAGS = -O3 -march=westmere -flto -s -DNDEBUG
 
 # Compiler flags, paths and libraries
-CFLAGS = -std=c11 -pedantic -Wall -Wextra -O3 -march=westmere -gdwarf-4
+CFLAGS = -std=c11 -pedantic -Wall -Wextra $(CUSTOM_FLAGS)
 LFLAGS = $(CFLAGS)
 LIBS   = -lm
 

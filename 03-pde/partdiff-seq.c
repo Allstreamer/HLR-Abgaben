@@ -200,10 +200,10 @@ static void calculate(const struct calculation_arguments *arguments,
 
                 double residuum = getResiduum(arguments, options, i, j, star);
                 const double korrektur = residuum;
-                residuum = (residuum < 0) ? -residuum : residuum;
-                results->stat_precision = (residuum < results->stat_precision)
-                                              ? results->stat_precision
-                                              : residuum;
+                residuum = fabs(residuum);
+                if (!(residuum < results->stat_precision)) {
+                    results->stat_precision = residuum;
+                }
 
                 Matrix[m1][i][j] = Matrix[m2][i][j] + korrektur;
             }

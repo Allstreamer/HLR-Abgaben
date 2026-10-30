@@ -1,0 +1,9 @@
+# Object files
+*.o
+# Perf results
+*.data
+# executables
+*.x
+
+# Benchmark result
+diff.txt
