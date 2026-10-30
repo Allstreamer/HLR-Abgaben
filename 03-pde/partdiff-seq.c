@@ -201,6 +201,8 @@ static void calculate(const struct calculation_arguments *arguments,
 
 
     while (options->term_iteration > 0) {
+        int precision_needed = (options->termination == TERM_PREC) || (options->term_iteration == 1);
+
         /* over all columns */
         for (int i = 1; i < N; i++) {
             /* over all rows */
@@ -212,14 +214,17 @@ static void calculate(const struct calculation_arguments *arguments,
                                     Matrix[m2][i][j + 1] - Matrix[m2][i + 1][j] +
                                     4.0 * Matrix[m2][i][j];
 
-                double residuum = getResiduum(arguments, options, i, j, star);
-                const double korrektur = residuum;
-                residuum = fabs(residuum);
-                if (!(residuum < results->stat_precision)) {
-                    results->stat_precision = residuum;
+                const double residuum = getResiduum(arguments, options, i, j, star);
+
+                if (precision_needed) {
+                    double korrektur = fabs(residuum);
+
+                    if (!(korrektur < results->stat_precision)) {
+                        results->stat_precision = korrektur;
+                    }
                 }
 
-                Matrix[m1][i][j] = Matrix[m2][i][j] + korrektur;
+                Matrix[m1][i][j] = Matrix[m2][i][j] + residuum;
             }
         }
 
