@@ -28,7 +28,8 @@ struct calculation_arguments {
     int N; /* number of spaces between lines (lines=N+1)     */
     int num_matrices; /* number of matrices                             */
     double ***Matrix; /* index matrix used for addressing M             */
-    double *function_lookup_table;
+    double *function_lookup_table_x;
+    double *function_lookup_table_y;
     double *M; /* two matrices with real values                  */
     double h; /* length of a space between two lines            */
 };
@@ -55,7 +56,8 @@ static void initVariables(struct calculation_arguments *arguments,
                           const struct options *options) {
     arguments->N = options->interlines * 8 + 9 - 1;
     arguments->num_matrices = (options->method == METH_JACOBI) ? 2 : 1;
-    arguments->function_lookup_table = NULL;
+    arguments->function_lookup_table_x = NULL;
+    arguments->function_lookup_table_y = NULL;
     //
     arguments->h = (double) (1.0f / (float) arguments->N);
 
@@ -75,8 +77,9 @@ static void freeMatrices(const struct calculation_arguments *arguments) {
     free(arguments->Matrix);
     free(arguments->M);
 
-    if (arguments->function_lookup_table != NULL) {
-        free(arguments->function_lookup_table);
+    if (arguments->function_lookup_table_x != NULL) {
+        free(arguments->function_lookup_table_x);
+        free(arguments->function_lookup_table_y);
     }
 }
 
@@ -117,7 +120,8 @@ static void allocateMatrices(struct calculation_arguments *arguments, const stru
     }
 
     if (options->inf_func != FUNC_F0) {
-        arguments->function_lookup_table = (double *)allocateMemory((N + 1) * sizeof(double));
+        arguments->function_lookup_table_x = (double *)allocateMemory((N + 1) * sizeof(double));
+        arguments->function_lookup_table_y = (double *)allocateMemory((N + 1) * sizeof(double));
     }
 }
 
@@ -153,9 +157,15 @@ static void initMatrices(const struct calculation_arguments *arguments,
 
     if (options->inf_func != FUNC_F0) {
         const double constant_factor = PI * arguments->h;
+        const double pi_h = TWO_PI_SQUARE * arguments->h * arguments->h;
+
         for (int i = 0; i < N; i++) {
-            arguments->function_lookup_table[i] = (
+            arguments->function_lookup_table_x[i] = (
                 sin((double) (i) * constant_factor)
+            );
+
+            arguments->function_lookup_table_y[i] = (
+                pi_h * sin((double) (i) * constant_factor)
             );
         }
     }
@@ -172,9 +182,8 @@ double getResiduum(const struct calculation_arguments *arguments,
     if (options->inf_func == FUNC_F0) {
         return -star / 4.0;
     }
-    const double pi_h = TWO_PI_SQUARE * arguments->h * arguments->h;
 
-    return (arguments->function_lookup_table[x] * arguments->function_lookup_table[y] * pi_h - star) / 4.0;
+    return (arguments->function_lookup_table_x[x] * arguments->function_lookup_table_y[y] - star) / 4.0;
 }
 
 /* ************************************************************************ */

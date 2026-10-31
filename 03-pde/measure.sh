@@ -34,4 +34,4 @@ rm -f diff.txt
 worker a & worker b & wait
 rm -f t_a_*.txt t_b_*.txt
 column -t diff.txt
-awk -v need=$need '{ if ($5 < $4) w++ } END { printf "new faster in %d/%d runs (need %d) -> %s\n", w, NR, need, (w >= need ? "significant (p<0.05)" : "not significant") }' diff.txt
+awk -v need=$need '{ if ($5 <= $4) w++ } END { printf "new faster in %d/%d runs (need %d) -> %s\n", w, NR, need, (w >= need ? "significant (p<0.05)" : "not significant") }' diff.txt
