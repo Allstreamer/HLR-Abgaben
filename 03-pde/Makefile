@@ -1,6 +1,6 @@
 # Common definitions
-CC = clang
-#CC = gcc
+#CC = clang
+CC = gcc
 
 # Testing assert:
 #CUSTOM_FLAGS = -O3 -march=westmere -gdwarf-4 -DNDEBUG
@@ -11,7 +11,8 @@ CC = clang
 #CUSTOM_FLAGS = -O3 -march=westmere -flto -DNDEBUG -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -Rpass-analysis=loop-vectorize
 
 # Release flags:
-CUSTOM_FLAGS = -O3 -march=westmere -flto -fuse-ld=lld -DNDEBUG
+CUSTOM_FLAGS = -O3 -march=westmere -flto
+#CUSTOM_FLAGS = -O3 -march=westmere
 
 # Compiler flags, paths and libraries
 CFLAGS = -std=c11 -pedantic -Wall -Wextra $(CUSTOM_FLAGS)

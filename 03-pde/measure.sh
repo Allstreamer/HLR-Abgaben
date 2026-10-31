@@ -2,15 +2,15 @@
 # To prove null hypothisis (p = 0.03)
 #runs=10; need=9     # p = 0.011
 #runs=20; need=15     # p = 0.021
-runs=30; need=20    # p = 0.049
-#runs=50; need=32    # p = 0.032
+#runs=30; need=20    # p = 0.049
+runs=50; need=32    # p = 0.032
 #runs=100; need=59   # p = 0.044
 
 worker() {
   for i in $(seq $((runs / 2))); do
     method=$(shuf -i 1-2 -n 1)
     function=$(shuf -i 1-2 -n 1)
-    iters=$(shuf -i 250-1000 -n 1)
+    iters=$(shuf -i 1000-5000 -n 1)
     args="1 $method 64 $function 2 $iters"
 
     # https://www.youtube.com/watch?v=r-TLSBdHe1A
